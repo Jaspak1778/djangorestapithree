@@ -147,7 +147,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 # set this to False if the backend does not support using time zones
-USE_TZ = False
+USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
