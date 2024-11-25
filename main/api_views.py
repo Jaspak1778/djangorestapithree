@@ -15,6 +15,9 @@ from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny
+#jwt
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 '''
 #Poistaa CSRF tarkistuksen testausta varten
@@ -23,12 +26,21 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # Ei tarkista CSRF-tokenia
 '''
-   
+
+# jwt Login view, joka palauttaa JWT tokenit
+class MyTokenObtainPairView(TokenObtainPairView):
+    permission_classes = (AllowAny,)
+
+
+# jwt Refresh token view
+class MyTokenRefreshView(TokenRefreshView):
+    permission_classes = (AllowAny,)
+
+#perus api näkymät
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created')
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
@@ -76,6 +88,7 @@ class UserViewSet(viewsets.ModelViewSet):
         # Palauttaa vain kirjautuneen käyttäjän querysetin
         return User.objects.filter(id=self.request.user.id)
 
+
 #Käyttäjä tiedot
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -87,7 +100,8 @@ def user_profile_view(request):
     serializer = UserSerializer(user)
     return Response(serializer.data)    
 
-
+'''
+#csfr login
 @api_view(['POST'])
 def login_view(request):
     """
@@ -112,6 +126,29 @@ def login_view(request):
     else:
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
+'''
+
+#jwt login
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_view(request):
+    """
+    Käyttäjän kirjautuminen ja JWT tokenin palauttaminen.
+    """
+    username = request.data.get('username')
+    password = request.data.get('password')
+    user = authenticate(request, username=username, password=password)
+
+    if user is not None:
+        # Kirjautuminen onnistui, luo JWT token
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }, status=status.HTTP_200_OK)
+    else:
+        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Tunnusten luonti API endpoint
 @api_view(['POST'])
@@ -122,13 +159,13 @@ def signup(request):
         return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+#jwt ei tarvitse mutta saa olla
 @api_view(['POST'])
 def logout_view(request):
     logout(request)
     return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
 
-#tee csfr token haku kun suoritetaan POST ja DELETE pyyntöjä
+#tee csfr token haku kun suoritetaan POST ja DELETE pyyntöjä 'api/csfr' , jwt ei tarvita
 def csrf_token_view(request):
     csrf_token = get_token(request)
     return JsonResponse({'csrfToken': csrf_token})

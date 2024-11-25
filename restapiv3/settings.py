@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+#jwt
+from datetime import timedelta
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-
 import mimetypes
 mimetypes.add_type("text/css", ".css", True)
 
@@ -34,7 +36,8 @@ DEBUG = True
 
 # SECURITY WARNING: In production, allow only those domains which you trust.
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://*.azurewebsites.net']
+CSRF_TRUSTED_ORIGINS = ['https://*.azurewebsites.net',     #azure täytyy olla
+                        'http://localhost:3000']
 CORS_ALLOW_ALL_ORIGINS: True
 
 # Application definition
@@ -92,6 +95,8 @@ WSGI_APPLICATION = 'restapiv3.wsgi.application'
 # https://github.com/microsoft/mssql-django
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+
+#mssql 
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
@@ -160,3 +165,36 @@ STATIC_ROOT = 'static'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#lisä asetukset: poista tai muokkaa jos azure ei toimi 24.11.2024
+
+
+#jwt
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+#jwt
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Käyttäjän tokenin voimassaoloaika
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),     # Refresh-tokenin voimassaoloaika
+    'ROTATE_REFRESH_TOKENS': True,                  # Luo uusi refresh-token käytettäessä
+    'BLACKLIST_AFTER_ROTATION': True,               # Vanha refresh-token mitätöityy
+    'AUTH_HEADER_TYPES': ('Bearer',),               # Käytä "Bearer" -headeria
+}
+
+#vain csfr ja cookie asetuksiin
+#poista tai kommentoi yli jos muut sovellukset ei toimi!
+
+# # # CORS-asetukset
+# CORS_ALLOW_CREDENTIALS = True
+# CSRF_COOKIE_SAMESITE = 'None'
+# CSRF_COOKIE_SECURE = True  # Ensure your site uses HTTPS
+# SESSION_COOKIE_SAMESITE = 'None'
+# SESSION_COOKIE_SECURE = True  # Ensure your site uses HTTPS
