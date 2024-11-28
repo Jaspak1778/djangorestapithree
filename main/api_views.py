@@ -84,9 +84,14 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
     def get_queryset(self):
-        # Palauttaa vain kirjautuneen käyttäjän querysetin
-        return User.objects.filter(id=self.request.user.id)
+        user = self.request.user
+        if user.is_staff or user.is_superuser:
+            # Adminit näkevät kaikki käyttäjät
+            return User.objects.all()
+        # Tavalliset käyttäjät näkevät vain omat tietonsa
+        return User.objects.filter(id=user.id)
 
 
 #Käyttäjä tiedot
