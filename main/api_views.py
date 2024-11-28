@@ -157,6 +157,7 @@ def login_view(request):
 
 # Tunnusten luonti API endpoint
 @api_view(['POST'])
+@permission_classes([AllowAny])    #ohitettu JWT tarkistus koska kyseessä on uuden käyttäjän luonti
 def signup(request):
     serializer = SignupSerializer(data=request.data)
     if serializer.is_valid():
