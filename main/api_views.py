@@ -92,6 +92,12 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         # Tavalliset käyttäjät näkevät vain omat tietonsa
         return User.objects.filter(id=user.id)
+    
+   
+    def is_superuser(self, request):
+        # Tarkistetaan, onko käyttäjä superuser
+        is_superuser = request.user.is_superuser
+        return Response({"is_superuser": is_superuser})
 
 
 #Käyttäjä tiedot
