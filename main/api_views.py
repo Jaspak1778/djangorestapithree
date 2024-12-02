@@ -36,6 +36,16 @@ class MyTokenObtainPairView(TokenObtainPairView):
 class MyTokenRefreshView(TokenRefreshView):
     permission_classes = (AllowAny,)
 
+class IsSuperuserOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        # Estetään muut kuin adminit ja superuserit muokkaamasta is_superuser kenttää
+        if request.method == 'PATCH':
+            if 'is_superuser' in request.data:
+                if not request.user.is_superuser:
+                    return False
+        return True
+
+
 #perus api näkymät
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created')
@@ -83,7 +93,7 @@ class LikeViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsSuperuserOrReadOnly]
     
     def get_queryset(self):
         user = self.request.user
