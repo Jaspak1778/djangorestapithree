@@ -36,6 +36,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 class MyTokenRefreshView(TokenRefreshView):
     permission_classes = (AllowAny,)
 
+
 class IsSuperuserOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         # Estetään muut kuin adminit ja superuserit muokkaamasta is_superuser kenttää
@@ -48,7 +49,7 @@ class IsSuperuserOrReadOnly(permissions.BasePermission):
 
 #perus api näkymät
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('-created')
+    queryset = Post.objects.all().order_by('-updated')
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     def perform_create(self, serializer):
@@ -181,14 +182,15 @@ def signup(request):
         return Response({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 #jwt ei tarvitse mutta saa olla
 @api_view(['POST'])
 def logout_view(request):
     logout(request)
     return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
 
+
 #tee csfr token haku kun suoritetaan POST ja DELETE pyyntöjä 'api/csfr' , jwt ei tarvita
 def csrf_token_view(request):
     csrf_token = get_token(request)
     return JsonResponse({'csrfToken': csrf_token})
-
